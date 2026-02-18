@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>انتقال هویت - Main Sikh</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --neon-red: #ff004d;
+      --neon-pink: #ff2e82;
+      --neon-cyan: #00f0ff;
+      --text-glow: rgba(255, 0, 77, 0.7);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--neon-red);
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(255,0,77,0.08) 0%, transparent 25%),
+        radial-gradient(circle at 90% 80%, rgba(0,240,255,0.06) 0%, transparent 30%);
+    }
+
+    canvas#matrix {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .form-container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 520px;
+      padding: 2.5rem 2rem;
+      background: rgba(10, 10, 10, 0.75);
+      border: 1px solid rgba(255, 0, 77, 0.25);
+      border-radius: 12px;
+      backdrop-filter: blur(8px);
+      box-shadow: 
+        0 0 40px rgba(255, 0, 77, 0.15),
+        inset 0 0 20px rgba(0, 240, 255, 0.05);
+      transition: all 0.4s ease;
+    }
+
+    .form-container:hover {
+      border-color: rgba(255, 46, 130, 0.5);
+      box-shadow: 0 0 60px rgba(255, 46, 130, 0.25);
+    }
+
+    h1 {
+      font-size: 2.6rem;
+      letter-spacing: 0.5em;
+      text-align: center;
+      margin-bottom: 2rem;
+      background: linear-gradient(90deg, #ff004d, #ff2e82, #00f0ff, #ff2e82, #ff004d);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      background-size: 300%;
+      animation: gradientFlow 12s linear infinite;
+      text-shadow: 0 0 20px var(--text-glow);
+    }
+
+    .input-group {
+      margin: 1.4rem 0;
+      position: relative;
+    }
+
+    input {
+      width: 100%;
+      padding: 1rem 1.2rem;
+      background: rgba(20, 20, 20, 0.8);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      border-radius: 6px;
+      color: #e0e0e0;
+      font-size: 1.1rem;
+      font-family: inherit;
+      transition: all 0.3s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--neon-pink);
+      box-shadow: 0 0 18px rgba(255, 46, 130, 0.4);
+      background: rgba(30, 30, 30, 0.9);
+    }
+
+    input::placeholder {
+      color: rgba(0, 240, 255, 0.4);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 1.1rem;
+      margin-top: 1.8rem;
+      background: linear-gradient(135deg, #ff004d, #ff2e82);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1.2rem;
+      letter-spacing: 0.25em;
+      cursor: pointer;
+      transition: all 0.35s;
+      box-shadow: 0 8px 25px rgba(255, 0, 77, 0.35);
+    }
+
+    .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 35px rgba(255, 46, 130, 0.5);
+      background: linear-gradient(135deg, #ff2e82, #ff004d);
+    }
+
+    .success {
+      color: #00ff9d;
+      font-size: 1.6rem;
+      text-align: center;
+      margin-top: 2rem;
+      text-shadow: 0 0 15px #00ff9d80;
+    }
+
+    .hidden { display: none !important; }
+
+    @keyframes gradientFlow {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 300% 50%; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="matrix"></canvas>
+
+<div class="form-container" id="step1">
+  <h1>تایید‌هویت</h1>
+  
+  <div class="input-group">
+    <input type="text" id="username" placeholder="نام" autocomplete="off" required />
+  </div>
+  
+  <div class="input-group">
+    <input type="text" id="tag" placeholder="تگ / خالق تگ / حق تگ / لیدر" autocomplete="off" required />
+  </div>
+  
+  <button class="btn" onclick="nextStep()">تأیید و ادامه →</button>
+</div>
+
+<div class="form-container hidden" id="step2">
+  <h1>aMir Tomas</h1>
+  
+  <div class="input-group">
+    <input type="text" id="app" placeholder="در چه اپلیکیشنی هست؟" autocomplete="off" required />
+  </div>
+  
+  <div class="input-group">
+    <input type="text" id="account" placeholder="آیدی یا شماره اکانت" autocomplete="off" required />
+  </div>
+  
+  <button class="btn" onclick="sendToTelegram()">تایید و ارسال</button>
+  
+  <div id="status" class="success hidden"></div>
+</div>
+
+<script>
+// ─── Matrix Rain (بهینه‌تر) ────────────────────────────────────────
+const canvas = document.getElementById('matrix');
+const ctx = canvas.getContext('2d');
+
+let width, height, columns, drops;
+
+function initMatrix() {
+  width = canvas.width = window.innerWidth;
+  height = canvas.height = window.innerHeight;
+  
+  const fontSize = 14;
+  columns = Math.floor(width / fontSize);
+  drops = new Array(columns).fill(1);
+}
+
+initMatrix();
+window.addEventListener('resize', initMatrix);
+
+const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン$+-*/=%#&@█▓▒░';
+
+function drawMatrix() {
+  ctx.fillStyle = 'rgba(10,10,10,0.07)';
+  ctx.fillRect(0, 0, width, height);
+  
+  ctx.fillStyle = '#00ff41';
+  ctx.font = '14px Share Tech Mono';
+  
+  for (let i = 0; i < columns; i++) {
+    const text = chars[Math.floor(Math.random() * chars.length)];
+    const x = i * 14;
+    const y = drops[i] * 14;
+    
+    ctx.fillText(text, x, y);
+    
+    if (y > height && Math.random() > 0.975) {
+      drops[i] = 0;
+    }
+    drops[i]++;
+  }
+}
+
+setInterval(drawMatrix, 60);   // کمی کندتر → کمتر هنگ
+
+// ─── Form Logic ─────────────────────────────────────────────────────
+function nextStep() {
+  const username = document.getElementById('username').value.trim();
+  const tag = document.getElementById('tag').value.trim();
+  
+  if (!username || !tag) {
+    alert("هر دو فیلد مرحله اول رو پر کن");
+    return;
+  }
+  
+  document.getElementById('step1').classList.add('hidden');
+  document.getElementById('step2').classList.remove('hidden');
+}
+
+async function sendToTelegram() {
+  const username = document.getElementById('username').value.trim();
+  const tag      = document.getElementById('tag').value.trim();
+  const app      = document.getElementById('app').value.trim();
+  const account  = document.getElementById('account').value.trim();
+  const status   = document.getElementById('status');
+
+  if (!app || !account) {
+    alert("فیلدهای مرحله دوم رو هم پر کن");
+    return;
+  }
+
+  const message = `
+ تایید هویت aMirTomas - ${new Date().toLocaleString('fa-IR')}
+
+اسم: ${username}
+تگ/لیدر/خالق: ${tag}
+اپلیکیشن: ${app}
+آیدی/شماره: ${account}
+  `.trim();
+
+  const token = "8291410405:AAGF8gPnowPZNJ_R-g7E_NJSJqM0JVl6vK4";
+  const chat_id = "7915198282";
+
+  const url = `https://api.telegram.org/bot${token}/sendMessage`;
+  const data = new URLSearchParams();
+  data.append('chat_id', chat_id);
+  data.append('text', message);
+  data.append('parse_mode', 'Markdown');
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      body: data,
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    });
+
+    if (response.ok) {
+      status.textContent = "ارسال شد منتظر اطلاع";
+      status.classList.remove('hidden');
+      document.querySelectorAll('input, button').forEach(el => el.disabled = true);
+    } else {
+      const err = await response.json();
+      alert("ارسال نشد\n" + (err.description || "خطای ناشناخته"));
+    }
+  } catch (err) {
+    alert("مشکل اتصال\n" + err.message);
+    console.error(err);
+  }
+}
+</script>
+</body>
+</html>
